@@ -1,0 +1,126 @@
+#include <Servo.h>
+#include <SoftwareSerial.h>
+SoftwareSerial bluetooth(0, 1);
+
+Servo rotate;
+Servo stretch;
+Servo pull;
+Servo take;
+char t;
+
+void setup()
+{
+  Serial.begin(9600);
+  bluetooth.begin(9600);
+
+  pinMode(2, OUTPUT);
+  take.attach(3);
+  pinMode(4, OUTPUT);
+  rotate.attach(5);
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+  pull.attach(9);
+  stretch.attach(11);
+  pinMode(12, OUTPUT); //első lámpa
+  pinMode(10, OUTPUT); //hátsó lámpa
+
+  rotate.write(90);
+  digitalWrite(12, HIGH);
+  digitalWrite(10, HIGH);
+}
+
+void loop()
+{
+  if (bluetooth.available()) {
+
+    t = bluetooth.read();
+
+    if (Serial.available()) {
+      bluetooth.print((char)Serial.read());
+
+      if (t == 'E') {
+        Serial.println("Előre");
+        digitalWrite(2, HIGH);
+        digitalWrite(6, HIGH);
+        digitalWrite(4, LOW);
+        digitalWrite(7, LOW);
+      } else if (t == 'H') {
+        Serial.println("Hátra");
+        digitalWrite(2, LOW);
+        digitalWrite(6, LOW);
+        digitalWrite(4, HIGH);
+        digitalWrite(7, HIGH);
+      } else if (t == 'B') {
+        Serial.println("Balra");
+        digitalWrite(2, LOW);
+        digitalWrite(6, HIGH);
+        digitalWrite(4, LOW);
+        digitalWrite(7, LOW);
+      } else if (t == 'J') {
+        Serial.println("Jobbra");
+        digitalWrite(2, HIGH);
+        digitalWrite(6, LOW);
+        digitalWrite(4, LOW);
+        digitalWrite(7, LOW);
+      } else if (t == 'X') {
+        Serial.println("STOP");
+        digitalWrite(2, LOW);
+        digitalWrite(6, LOW);
+        digitalWrite(4, LOW);
+        digitalWrite(7, LOW);
+      } else if (t == '1') {
+        if (digitalRead(12) == HIGH) {
+          digitalWrite(12, LOW);
+          Serial.println("Hátsó lámpa: KIKAPCSOLVA");
+        } else {
+          digitalWrite(12, HIGH);
+          Serial.println("Hátsó lámpa: BEKAPCSOLVA");
+        }
+      } else if (t == '2') {
+        stretch.write(stretch.read() + 5);
+        Serial.print(" New stretch position: ");
+        Serial.println(stretch.read());
+      } else if (t == '3') {
+        if (pull.read() + 10 <= 160)
+          pull.write(pull.read() + 10);
+        Serial.print(" New pull position: ");
+        Serial.println(pull.read());
+      } else if (t == '4') {
+        rotate.write(rotate.read() + 5);
+        Serial.print(" New rotate position: ");
+        Serial.println(rotate.read());
+      } else if (t == '5') {
+        if (take.read() == 93 || take.read() == 80)
+          take.write(100);
+        else take.write(80);
+        Serial.print(" New take position: ");
+        Serial.println(take.read());
+        delay(500);
+      } else if (t == '6') {
+        rotate.write(rotate.read() - 5);
+        Serial.print(" New rotate position: ");
+        Serial.println(rotate.read());
+      } else if (t == '7') {
+        if (digitalRead(10) == HIGH) {
+          digitalWrite(10, LOW);
+          Serial.println("Első lámpa: KIKAPCSOLVA");
+        } else {
+          digitalWrite(10, HIGH);
+          Serial.println("Első lámpa: Bekapcsolva");
+        }
+      } else if (t == '8') {
+        if (stretch.read() - 5 >= 70)
+          stretch.write(stretch.read() - 5);
+        Serial.print(" New stretch position: ");
+        Serial.println(stretch.read());
+      } else if (t == '9') {
+        if (pull.read() - 10 >= 90)
+          pull.write(pull.read() - 10);
+        Serial.print(" New pull position: ");
+        Serial.println(pull.read());
+      }
+      
+      delay(200);
+    }
+  }
+}
